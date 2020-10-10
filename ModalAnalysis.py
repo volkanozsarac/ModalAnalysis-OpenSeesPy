@@ -13,7 +13,7 @@ def ModalAnalysis(numEigen, outname=None):
     Notes
     -----
         If values of mass participation ratio in a direction is -1
-        no mass is assigned in unrestrained dofs of this direction.
+        no mass is assigned in unrestrained dofs for this direction.
         
     Parameters
     ----------
