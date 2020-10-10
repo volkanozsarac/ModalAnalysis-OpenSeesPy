@@ -10,10 +10,15 @@ def ModalAnalysis(numEigen, outname=None):
         Affiliation: University School for Advanced Studies IUSS Pavia
         e-mail: volkanozsarac@iusspavia.it
     
+	References
+	----------
+		Chopra, A.K. 2012. Dynamics of Structures: Theory and 
+		Applications to Earthquake Engineering, Prentice Hall.
+
     Notes
     -----
         If values of mass participation ratio in a direction is -1
-        no mass is assigned in unrestrained dofs for this direction.
+        the total unrestrained mass in this dof is equal to 0.
         
     Parameters
     ----------
@@ -29,7 +34,7 @@ def ModalAnalysis(numEigen, outname=None):
         Period array for the first numEigen modes.
     Mdict : dictionary
         dictionary containing mass participation ratios for first numEigen
-        modes in 6 directions.
+        modes in all 6 dofs.
 
     """
     import numpy as np
@@ -57,8 +62,8 @@ def ModalAnalysis(numEigen, outname=None):
     Mmatrix = np.array(Mmatrix) # Convert the list to an array
     Mmatrix.shape = (N,N)       # Make the array an NxN matrix
 
-    # Rerrange the mass matrix in accordance with nodelist obtained from getNodeTags()
-    DOFs = []       # List containing indices of unrestrained DOFs in the global mass matrix
+    # Rerrange the mass matrix in accordance with nodelist obtained from getNodeTags() to obtain Muu
+    DOFs = []       # List containing indices of unrestrained DOFs from the global mass matrix
     used = {}       # Dictionary with nodes and associated dof indices used in unrestrained mass matrix
     ldict = {}      # Dictionary containing influence vectors
     Mdict = {}      # Dictionary containing modal masses
@@ -78,7 +83,7 @@ def ModalAnalysis(numEigen, outname=None):
                 ldict['l'+str(j+1)][idx,0] = 1  # Assign 1 in influence vector if dof is in dir j
                 idx += 1
 
-    Mmatrix = Mmatrix[DOFs,:][:,DOFs]          # Unrestrained mass matrix or Muu
+    Mmatrix = Mmatrix[DOFs,:][:,DOFs]           # Unrestrained mass matrix or Muu
 
     op.wipeAnalysis()
     listSolvers = ['-genBandArpack','-fullGenLapack','-symmBandLapack']
@@ -109,21 +114,21 @@ def ModalAnalysis(numEigen, outname=None):
 
     for mode in range(1,numEigen+1):
         idx = 0
-        phi = np.zeros([N,1])
+        phi = np.zeros([N,1])                          # Eigen vector for the specified mode
         for node in used:
             for dof in used[node]:
                 phi[idx,0]=op.nodeEigenvector(node,mode,dof)
                 idx += 1
         
         for j in range(1,NDF+1):
-            l = ldict['l'+str(j)]                  # Influence vector in specified direction (1 or 2 or 3 or 4 or 5 or 6)
-            Mtot = l.T@Mmatrix@l                   # Total mass in specified direction
-            if not Mtot == 0:                      # Check if any mass is assigned in specified direction
-                Mn = phi.T@Mmatrix@phi             # Modal mass in specified direction
-                Ln = phi.T@Mmatrix@l               # Effective modal mass in specified direction
-                Mnstar = (Ln**2/Mn/Mtot*100)[0,0]  # Normalised effective modal mass participating [%], in specified direction
-            else: Mnstar = -1                      # No mass is assigned in specified direction, indicate it with -1.
-            Mdict['M'+str(j)][mode-1] = Mnstar     # Save the modal mass participation ratio for the specified direction
+            l = ldict['l'+str(j)]                      # Influence vector in specified dof
+            Mtot = l.T@Mmatrix@l                       # Total mass in specified dof
+            if not Mtot == 0:                          # Check if any mass is assigned in dof
+                Mn = phi.T@Mmatrix@phi                 # Modal mass in specified direction
+                Ln = phi.T@Mmatrix@l                   # Effective modal mass in specified dof
+                Mnstar = (Ln**2/Mn/Mtot*100)[0,0]      # Normalised effective modal mass participating [%] in specified dof
+            else: Mnstar = -1                          # No mass is assigned in specified dof, indicate it with -1.
+            Mdict['M'+str(j)][mode-1] = Mnstar         # Save the modal mass participation ratio for the specified dof
     
     for j in range(1,7):
         try: 
