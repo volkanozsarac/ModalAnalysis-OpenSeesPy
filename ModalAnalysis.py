@@ -8,6 +8,7 @@ def ModalAnalysis(numEigen, outname=None):
     -----------
         Author: Volkan Ozsarac, Earthquake Engineering PhD Candidate
         Affiliation: University School for Advanced Studies IUSS Pavia
+        e-mail: volkanozsarac@iusspavia.it
     
     Notes
     -----
@@ -18,13 +19,13 @@ def ModalAnalysis(numEigen, outname=None):
     ----------
     numEigen : int
         Number of eigenvalues to calculate.
-    outname : str, optional (The default is None)
+    outname  : str, optional (The default is None)
         if not None, the modal properties for first numEigen modes
         will be printed into outname.csv.
 
     Returns
     -------
-    T : numpy.ndarray
+    T     : numpy.ndarray
         Period array for the first numEigen modes.
     Mdict : dictionary
         dictionary containing mass participation ratios for first numEigen
