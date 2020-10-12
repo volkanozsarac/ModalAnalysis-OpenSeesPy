@@ -37,7 +37,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
     Mratios  : dictionary
         Effective modal mass participation ratios for the first numEigen modes.
     Mfactors : dictionary
-        Modal mass particpation factors for the first numEigen modes.
+        Modal particpation factors for the first numEigen modes.
     Mtots    : dictionary
         Total mass of the structure
 
