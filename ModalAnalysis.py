@@ -67,37 +67,40 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         temp = len(op.nodeDOFs(node))
         if temp > NDF: NDF = temp
 
-    # Rerrange the mass matrix in accordance with nodelist obtained from getNodeTags() to obtain Muu
-    DOFs = []       # List containing indices of unrestrained DOFs from the global mass matrix
-    used = {}       # Dictionary with nodes and associated dof indices used in unrestrained mass matrix
+    DOFs = []       # List containing indices of unrestrained DOFs in the global mass matrix
+    used = {}       # Dictionary with nodes and associated DOFs used in unrestrained mass matrix
     ldict = {}      # Dictionary containing influence vectors
-    Mratios = {}     # Dictionary containing modal masses
-    Mfactors = {}    # Dictionary containing modal participation factors
+    Mratios = {}    # Dictionary containing modal masses
+    Mfactors = {}   # Dictionary containing modal participation factors
     for i in range(1,NDF+1):
         ldict[i] = np.zeros([N,1])
         Mratios[i] = np.zeros(numEigen)
         Mfactors[i] = np.zeros(numEigen)
         
-    idx = 0 # new dof index to use in unrestrained mass matrix
-    for node in op.getNodeTags():               # start iterating over each node
-        used[node] = []                         # create the list of unrestrained dofs used for the current dof
-        ndf = len(op.nodeDOFs(node))            # number of DOFs used for the the current node
-        for j in range(ndf):                    # iterate over used DOFs for the current node
-            temp = op.nodeDOFs(node)[j]         # get idx of this dof, if -1 (restrained)
-            if temp not in DOFs and temp >= 0:  # if it is unrestrained and not in DOFs list
-                DOFs.append(temp)               # add to the unrestrained DOFs list
-                used[node].append(j+1)          # for current node add to the used dof list (new idx in Muu)
-                ldict[j+1][idx,0] = 1           # Assign 1 in influence vector if dof is in dir j
-                idx += 1
+    # Obtain indices of unrestrained DOFs
+    # And rename the ids of DOFs used in unrestrained part of mass matrix
+    idx = 0                                     # Counter for unrestrained DOFs
+    for node in op.getNodeTags():               # Start iterating over each node
+        used[node] = []                         # List containing local ids of unrestrained DOFs in op.nodeDOFs(node)
+        ndf = len(op.nodeDOFs(node))            # Obtain total number of DOFs for the current node
+        for j in range(ndf):                    # Iterate over total DOF of the current node
+            temp = op.nodeDOFs(node)[j]         # Get the global DOF id, if -1 it is restrained
+            if temp not in DOFs and temp >= 0:  # Check if this DOF is unrestrained and not known before
+                DOFs.append(temp)               # Save this global id, it belongs to an unrestrained DOF
+                used[node].append(j+1)          # Save this local id, it belongs to an unrestrained DOF
+                ldict[j+1][idx,0] = 1           # Assign 1 in associated influence vector for this DOF
+                idx += 1                        # Increase the counter
 
-    # Get the unrestrained part of mass matrix, Muu
+    # Get the unrestrained part of mass matrix
     Mmatrix = Mmatrix[DOFs,:][:,DOFs]           
 
-    # Calculate the total masses in unrestrained dofs
+    # From now on we will only work with unrestrained part of the global vectors and matrices
+    # Calculate the total masses assigned to the unrestrained DOFs
     Mtots = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     for i in range(1,NDF+1):
         Mtots[i] = (ldict[i].T@Mmatrix@ldict[i])[0,0]
 
+    # Perform eigenvalue analysis
     op.wipeAnalysis()
     listSolvers = ['-genBandArpack','-fullGenLapack','-symmBandLapack']
     ok = 1  
@@ -126,9 +129,10 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         T = 2*np.pi/Omega
         frq = 1/T
 
+    # Obtain modal properties
     for mode in range(1,numEigen+1):
         idx = 0
-        phi = np.zeros([N,1])                         # Eigen vectors
+        phi = np.zeros([N,1]) # Eigen vector
         for node in used:
             for dof in used[node]:
                 phi[idx,0]=op.nodeEigenvector(node,mode,dof)
