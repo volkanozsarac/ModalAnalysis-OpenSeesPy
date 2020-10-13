@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec 27 15:01:40 2019
-Author: Volkan Ozsarac
-IUSS Pavia
-"""
-
 import openseespy.opensees as op
 from openseespy.postprocessing.Get_Rendering import * 
 import numpy as np
@@ -135,4 +128,62 @@ for i in range(len(X0)):
         elif masstype == 'Consistent':
             op.element('elasticBeamColumn', eleTag, *eleNodes, PierA, E, G, PierJ, PierIz, PierIy, PierTransfTag,'-mass',PierMass,'-cMass')
 
-T, Mratios, Mfactors, Mtots = ModalAnalysis(10, outname='OpenSeespy', pflag=1)
+numEigen = 8
+T, Mratios, Mfactors, Mtots = ModalAnalysis(numEigen, pflag=0)
+
+# determine PASS/FAILURE of test
+ok = 0
+
+#               SAP2000   SeismoStruct
+comparisonResults = [[0.348192,0.271303,0.211800,0.141027,0.107349,0.068943,0.055869,0.055094],
+                     [0.34819207,0.27130325,0.21179972,0.14102723,0.10734891,0.06894083,0.05585407,0.05509375]]
+print("\n\nComparisons of Periods [sec]:")
+print('{:>10}{:>15}{:>15}{:>15}'.format('Mode', 'OpenSees', 'SAP2000', 'SeismoStruct'))
+
+# formatString {%10s%15.5f%15.4f%15.4f}
+for i in range(0, numEigen):
+    print('{:>10}{:>15.5f}{:>15.4f}{:>15.4f}'.format(i + 1, T[i], comparisonResults[0][i], comparisonResults[1][i]))
+    resultOther = comparisonResults[0][i]
+    if abs(T[i] - resultOther) > 1e-5:
+        ok - 1
+
+comparisonResults = [[0.000000,0.000000,98.865000,0.000000,0.160000,0.000957,0.023000,0.923000],
+                     [0.000000,0.000000,98.865005,0.000000,0.160053,0.000957,0.024196,0.922046]]
+print("\n\nComparisons for Effective Modal Mass Participating in U\u2081 [%]:")
+print('{:>10}{:>15}{:>15}{:>15}'.format('Mode', 'OpenSees', 'SAP2000', 'SeismoStruct'))
+
+# formatString {%10s%15.5f%15.4f%15.4f}
+for i in range(0, numEigen):
+    print('{:>10}{:>15.4f}{:>15.4f}{:>15.4f}'.format(i + 1, Mratios[1][i], comparisonResults[0][i], comparisonResults[1][i]))
+    resultOther = comparisonResults[0][i]
+    if abs(Mratios[1][i] - resultOther) > 1e-3:
+        ok - 1
+        
+comparisonResults = [[33.129000,49.987000,0.000000,16.884000,0.000000,0.000000,0.000000,0.000000],
+                     [33.128723,49.986901,0.000000,16.884376,0.000000,0.000000,0.000000,0.000000]]
+print("\n\nComparisons for Effective Modal Mass Participating in U\u2082 [%]:")
+print('{:>10}{:>15}{:>15}{:>15}'.format('Mode', 'OpenSees', 'SAP2000', 'SeismoStruct'))
+
+# formatString {%10s%15.5f%15.4f%15.4f}
+for i in range(0, numEigen):
+    print('{:>10}{:>15.4f}{:>15.4f}{:>15.4f}'.format(i + 1, Mratios[2][i], comparisonResults[0][i], comparisonResults[1][i]))
+    resultOther = comparisonResults[0][i]
+    if abs(Mratios[2][i] - resultOther) > 1e-3:
+        ok - 1
+        
+comparisonResults = [[0.000000,0.000000,0.000111,0.000000,0.000008,32.735000,31.414000,0.972000],
+                     [0.000000,0.000000,0.000111,0.000000,0.000008,32.753245,31.603705,1.007302]]
+print("\n\nComparisons for Effective Modal Mass Participating in U\u2083 [%]:")
+print('{:>10}{:>15}{:>15}{:>15}'.format('Mode', 'OpenSees', 'SAP2000', 'SeismoStruct'))
+
+# formatString {%10s%15.5f%15.4f%15.4f}
+for i in range(0, numEigen):
+    print('{:>10}{:>15.4f}{:>15.4f}{:>15.4f}'.format(i + 1, Mratios[3][i], comparisonResults[0][i], comparisonResults[1][i]))
+    resultOther = comparisonResults[0][i]
+    if abs(Mratios[3][i] - resultOther) > 1e-3:
+        ok - 1
+        
+if ok == 0:
+    print("PASSED Verification Test Bridge3d.py \n\n")
+else:
+    print("FAILED Verification Test Bridge3d.py \n\n")
