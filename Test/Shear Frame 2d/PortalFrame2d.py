@@ -1,5 +1,4 @@
 from openseespy.opensees import *
-from ModalAnalysis import *
 from math import asin, sqrt
 
 # Two dimensional Frame: Eigenvalue Analysis & Effective Modal Mass Participation Ratios
