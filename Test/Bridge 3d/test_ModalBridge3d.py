@@ -134,7 +134,7 @@ def test_ModalAnalysis_3DBridge():
             elif masstype == 'Consistent':
                 op.element('elasticBeamColumn', eleTag, *eleNodes, PierA, E, G, PierJ, PierIz, PierIy, PierTransfTag,'-mass',PierMass,'-cMass')
     
-    T, Mratios, Mfactors, Mtots = ModalAnalysis(numEigen, pflag=0)
+    T, Mratios, Mfactors, Mtots = ModalAnalysis(numEigen, outname='OpenSeespy', pflag=1)
     
     # determine PASS/FAILURE of test
     ok = 0
