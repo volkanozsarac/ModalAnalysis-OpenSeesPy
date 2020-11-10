@@ -181,7 +181,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
                      "{:.2f}".format(Omega[mode]), "{:.2f}".format(Lambda[mode])))
 
             f.write('\nTotal Mass of the Structure\n')
-            f.write('M\u2081 [%],M\u2082 [%],M\u2083 [%]\n')
+            f.write('M\u2081,M\u2082,M\u2083\n')
             f.write('%s,%s,%s\n' \
                     % ( "{:.2f}".format(Mtots[1]), "{:.2f}".format(Mtots[2]), "{:.2f}".format(Mtots[3])))
 
