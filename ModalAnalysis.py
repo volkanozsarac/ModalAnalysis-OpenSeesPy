@@ -44,7 +44,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         Modal particpation factors for the first numEigen modes.
         Only given for horizontal and vertical excitation directions.
     Mtots    : dictionary
-        Total mass of the structure.
+        Total mass assigned to the unrestrained DOFs of the structure.
         Only given for horizontal and vertical excitation directions.
 
     """
@@ -53,10 +53,12 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
     import sys
 
     op.wipeAnalysis()
+    op.numberer("Plain")
     op.system('FullGeneral')
     op.analysis('Transient')
 
     # Extract the Mass Matrix
+    # Note that this is not the global mass matrix, but unrestrained part (Muu)
     op.integrator('GimmeMCK',1.0,0.0,0.0)
     op.analyze(1,0.0) 
     # Number of equations in the model
@@ -73,8 +75,8 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         temp = len(op.nodeDOFs(node))
         if temp > NDF: NDF = temp
 
-    DOFs = []       # List containing indices of unrestrained DOFs in the global mass matrix
-    used = {}       # Dictionary with nodes and associated DOFs used in unrestrained mass matrix
+    DOFs = []       # List containing indices of unrestrained DOFs
+    used = {}       # Dictionary with nodes and associated unrestrained DOFs
     ldict = {}      # Dictionary containing influence vectors
     Mratios = {}    # Dictionary containing effective modal masses ratios
     Mfactors = {}   # Dictionary containing modal participation factors
@@ -83,25 +85,25 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         Mratios[i] = np.zeros(numEigen)
         Mfactors[i] = np.zeros(numEigen)
         
-    # Obtain indices of unrestrained DOFs
-    # And rename the ids of DOFs used in unrestrained part of mass matrix
+    # Create the influence vectors and Get the unrestrained DOFs assigned to the nodes
+    # TODO -1: The influence vectors are not correct in case of rotational excitations
+    # One typical approach is to use center of mass on plane
     idx = 0                                     # Counter for unrestrained DOFs
     for node in op.getNodeTags():               # Start iterating over each node
-        used[node] = []                         # List containing local ids of unrestrained DOFs in op.nodeDOFs(node)
-        ndf = len(op.nodeDOFs(node))            # Obtain total number of DOFs for the current node
-        for j in range(ndf):                    # Iterate over total DOF of the current node
-            temp = op.nodeDOFs(node)[j]         # Get the global DOF id, if -1 it is restrained
-            if temp not in DOFs and temp >= 0:  # Check if this DOF is unrestrained and not known before
-                DOFs.append(temp)               # Save this global id, it belongs to an unrestrained DOF
-                used[node].append(j+1)          # Save this local id, it belongs to an unrestrained DOF
+        used[node] = []                         # Unrestrain local DOF ids
+        ndof = len(op.nodeDOFs(node))           # Total number of DOFs assigned
+        for j in range(ndof):                   # Iterate over each DOF
+            temp = op.nodeDOFs(node)[j]         # Get the global DOF id (-1 if restrained)
+            if temp not in DOFs and temp >= 0:  # Check if this DOF is unrestrained and is not known before
+                DOFs.append(temp)               # Save the global id of DOF 
+                used[node].append(j+1)          # Save the local id of DOF 
                 ldict[j+1][idx,0] = 1           # Influence vectors for horizontal and vertical excitations
-                                                # TODO -1: The influence vectors are not correct in case of rotational excitations
                 idx += 1                        # Increase the counter
 
-    # Get the unrestrained part of mass matrix
-    Mmatrix = Mmatrix[DOFs,:][:,DOFs]           
+    # This does not seem necessary when numberer is "Plain"
+    # But lets reorganize the mass matrix anyway
+    Mmatrix = Mmatrix[DOFs,:][:,DOFs]  
 
-    # From now on we will only work with unrestrained part of the global vectors and matrices
     # Calculate the total masses assigned to the unrestrained DOFs
     Mtots = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     for i in range(1,NDF+1):
@@ -163,7 +165,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
             Mratios[j]  = np.zeros(numEigen)
             Mfactors[j] = np.zeros(numEigen)
 
-    # TODO-1: Results are not correct for rotational excitation cases, ignore those.
+    # TODO-1: Results are not correct for rotational excitation cases, for now ignore those.
     del Mratios[6], Mratios[5], Mratios[4]
     del Mfactors[6], Mfactors[5], Mfactors[4]
 
