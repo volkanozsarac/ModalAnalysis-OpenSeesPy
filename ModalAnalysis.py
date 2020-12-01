@@ -171,75 +171,48 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
 
     # Calculate cumulative modal mass participation ratio
     sM1 = np.cumsum(Mratios[1]); sM2 = np.cumsum(Mratios[2]); sM3 = np.cumsum(Mratios[3])  
-
-    # Print results to the .csv file
+    
+    if outname != None or pflag == 1:
+	    arguments = []
+	    arguments.append('Modal Periods and Frequencies')
+	    arguments.append('%4s|%8s|%10s|%12s|%12s' \
+	          % ('Mode', 'T [sec]','f [Hz]','\u03C9 [rad/sec]', '\u03BB [rad\u00b2/sec\u00b2]'))
+	    for mode in range(numEigen):      
+	        arguments.append('%4s|%8s|%10s|%12s|%12s' \
+	              % ("{:.0f}".format(mode+1), "{:.4f}".format(T[mode]), "{:.3f}".format(frq[mode]), \
+	                 "{:.2f}".format(Omega[mode]), "{:.2f}".format(Lambda[mode])))
+	    arguments.append('Total Mass of the Structure')
+	    arguments.append('%8s|%8s|%8s' \
+	          % ('M\u2081','M\u2082','M\u2083'))
+	    arguments.append('%8s|%8s|%8s' \
+	            % ( "{:.2f}".format(Mtots[1]), "{:.2f}".format(Mtots[2]), "{:.2f}".format(Mtots[3])))
+	    arguments.append('Modal Mass Participation Factors') 
+	    arguments.append('%4s|%7s|%7s|%7s' \
+	        % ('Mode','\u0393\u2081','\u0393\u2082','\u0393\u2083') )             
+	    for mode in range(numEigen):
+	        arguments.append('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
+	            "{:.3f}".format(Mfactors[1][mode]), "{:.3f}".format(Mfactors[2][mode]), "{:.3f}".format(Mfactors[3][mode])))  
+	    arguments.append('Effective Modal Mass Participation Ratios [%]') 
+	    arguments.append('%4s|%7s|%7s|%7s' \
+	        % ('Mode','U\u2081','U\u2082','U\u2083') )              
+	    for mode in range(numEigen):
+	        arguments.append('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
+	            "{:.3f}".format(Mratios[1][mode]), "{:.3f}".format(Mratios[2][mode]), "{:.3f}".format(Mratios[3][mode])))  
+	    arguments.append('Cumulative Effective Modal Mass Participation Ratios [%]') 
+	    arguments.append('%4s|%7s|%7s|%7s' \
+	        % ('Mode','\u2211U\u2081','\u2211U\u2082','\u2211U\u2083') )              
+	    for mode in range(numEigen):
+	        arguments.append('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
+	            "{:.3f}".format(sM1[mode]), "{:.3f}".format(sM2[mode]), "{:.3f}".format(sM3[mode])))  
+	    arguments = '\n'.join(arguments)
+ 
+    # Write results to the .csv file
     if outname != None:
         with open(outname+'.csv','w', encoding='utf-32') as f:
-            f.write('Modal Periods and Frequencies\n')
-            f.write('Mode,T [sec],f [Hz],\u03C9 [rad/sec],\u03BB [rad\u00b2/sec\u00b2]\n')
-            for mode in range(numEigen):      
-                f.write('%s,%s,%s,%s,%s\n' \
-                      % ("{:.0f}".format(mode+1), "{:.4f}".format(T[mode]), "{:.3f}".format(frq[mode]), \
-                     "{:.2f}".format(Omega[mode]), "{:.2f}".format(Lambda[mode])))
-
-            f.write('\nTotal Mass of the Structure\n')
-            f.write('M\u2081,M\u2082,M\u2083\n')
-            f.write('%s,%s,%s\n' \
-                    % ( "{:.2f}".format(Mtots[1]), "{:.2f}".format(Mtots[2]), "{:.2f}".format(Mtots[3])))
-
-            f.write('\nModal Mass Participation Factors\n') 
-            f.write('Mode,\u0393\u2081,\u0393\u2082,\u0393\u2083\n')               
-            for mode in range(numEigen):
-                f.write('%s,%s,%s,%s\n' % ("{:.0f}".format(mode+1), \
-                    "{:.3f}".format(Mfactors[1][mode]), "{:.3f}".format(Mfactors[2][mode]), "{:.3f}".format(Mfactors[3][mode])))  
-
-            f.write('\nEffective Modal Mass Participation Ratios\n') 
-            f.write('Mode,U\u2081 [%],U\u2082 [%],U\u2083 [%]\n')               
-            for mode in range(numEigen):
-                f.write('%s,%s,%s,%s\n' % ("{:.0f}".format(mode+1), \
-                    "{:.3f}".format(Mratios[1][mode]), "{:.3f}".format(Mratios[2][mode]), "{:.3f}".format(Mratios[3][mode])))  
-
-            f.write('\nCumulative Effective Modal Mass Participation Ratios\n') 
-            f.write('Mode,\u2211U\u2081 [%],\u2211U\u2082 [%],\u2211U\u2083 [%]\n')               
-            for mode in range(numEigen):
-                f.write('%s,%s,%s,%s\n' % ("{:.0f}".format(mode+1), \
-                    "{:.3f}".format(sM1[mode]), "{:.3f}".format(sM2[mode]), "{:.3f}".format(sM3[mode])))  
+            f.write(arguments)
 
     # Print modal analysis results to the screen
     if pflag == 1:
-        print('\nModal Periods and Frequencies')
-        print('%4s|%8s|%10s|%12s|%12s' \
-              % ('Mode', 'T [sec]','f [Hz]','\u03C9 [rad/sec]', '\u03BB [rad\u00b2/sec\u00b2]'))
-        for mode in range(numEigen):      
-            print('%4s|%8s|%10s|%12s|%12s' \
-                  % ("{:.0f}".format(mode+1), "{:.4f}".format(T[mode]), "{:.3f}".format(frq[mode]), \
-                     "{:.2f}".format(Omega[mode]), "{:.2f}".format(Lambda[mode])))
-
-        print('\nTotal Mass of the Structure')
-        print('%8s|%8s|%8s' \
-              % ('M\u2081','M\u2082','M\u2083'))
-        print('%8s|%8s|%8s' \
-                % ( "{:.2f}".format(Mtots[1]), "{:.2f}".format(Mtots[2]), "{:.2f}".format(Mtots[3])))
-
-        print('\nModal Mass Participation Factors') 
-        print('%4s|%7s|%7s|%7s' \
-            % ('Mode','\u0393\u2081','\u0393\u2082','\u0393\u2083') )             
-        for mode in range(numEigen):
-            print('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
-                "{:.3f}".format(Mfactors[1][mode]), "{:.3f}".format(Mfactors[2][mode]), "{:.3f}".format(Mfactors[3][mode])))  
-
-        print('\nEffective Modal Mass Participation Ratios [%]') 
-        print('%4s|%7s|%7s|%7s' \
-            % ('Mode','U\u2081','U\u2082','U\u2083') )              
-        for mode in range(numEigen):
-            print('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
-                "{:.3f}".format(Mratios[1][mode]), "{:.3f}".format(Mratios[2][mode]), "{:.3f}".format(Mratios[3][mode])))  
-
-        print('\nCumulative Effective Modal Mass Participation Ratios [%]') 
-        print('%4s|%7s|%7s|%7s' \
-            % ('Mode','\u2211U\u2081','\u2211U\u2082','\u2211U\u2083') )              
-        for mode in range(numEigen):
-            print('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
-                "{:.3f}".format(sM1[mode]), "{:.3f}".format(sM2[mode]), "{:.3f}".format(sM3[mode])))  
+        print(arguments)
 
     return T, Mratios, Mfactors, Mtots
