@@ -85,7 +85,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         Mratios[i] = np.zeros(numEigen)
         Mfactors[i] = np.zeros(numEigen)
         
-    # Create the influence vectors and Get the unrestrained DOFs assigned to the nodes
+    # Create the influence vectors, and get the unrestrained DOFs assigned to the nodes
     # TODO -1: The influence vectors are not correct in case of rotational excitations
     # One typical approach is to use center of mass on plane
     idx = 0                                     # Counter for unrestrained DOFs
