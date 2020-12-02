@@ -1,8 +1,8 @@
-def ModalAnalysis(numEigen, outname=None, pflag=1):
+def ModalAnalysis(numEigen, pflag=1, outname=None):
     """
     Details
     -------
-        This script will perform a modal analysis on OpenSeespy model.
+        This script will return the modal properties of an OpenSeespy model.
     
     Information
     -----------
@@ -17,9 +17,10 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
 
     Notes
     -----
-        Total mass is obtained by summing the masses assigned to the
-        unrestrained dofs. Influence vectors for rotational excitation
-        are not correct at the moment, this addition remains as future work.
+        Total (activated) mass is obtained by summing the masses assigned to the
+        unrestrained degrees of freedoms (DOFs). Thus, it should not be confused 
+        with total mass assigned to all DOFs. Influence vectors for rotational 
+        excitation are not correct at the moment, this addition remains as future work.
         Which reference point to use is not clear for rotational excitations.
         SAP2000 and Seismostruct use different reference points.
         
@@ -27,11 +28,11 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
     ----------
     numEigen : int
         Number of eigenvalues to calculate.
-    outname  : str, optional (The default is None)
-        if not None, the modal properties for the first numEigen modes
-        will be printed into outname.csv.
     pflag    : int (1 or 0)
         flag to print output information on screen
+    outname  : str, optional (The default is None)
+        if not None and pFlag==1, the modal properties for the 
+        first numEigen modes will be writtend into outname.csv.
 
     Returns
     -------
@@ -39,13 +40,10 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
         Period array for the first numEigen modes.
     Mratios  : dictionary
         Effective modal mass participation ratios for the first numEigen modes.
-        Only given for horizontal and vertical excitation directions.
     Mfactors : dictionary
         Modal particpation factors for the first numEigen modes.
-        Only given for horizontal and vertical excitation directions.
     Mtots    : dictionary
-        Total mass assigned to the unrestrained DOFs of the structure.
-        Only given for horizontal and vertical excitation directions.
+        Total activated masses.
 
     """
     import numpy as np
@@ -172,7 +170,8 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
     # Calculate cumulative modal mass participation ratio
     sM1 = np.cumsum(Mratios[1]); sM2 = np.cumsum(Mratios[2]); sM3 = np.cumsum(Mratios[3])  
     
-    if outname != None or pflag == 1:
+    # Print modal analysis results
+    if pflag == 1:
 	    arguments = []
 	    arguments.append('Modal Periods and Frequencies')
 	    arguments.append('%4s|%8s|%10s|%12s|%12s' \
@@ -181,7 +180,7 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
 	        arguments.append('%4s|%8s|%10s|%12s|%12s' \
 	              % ("{:.0f}".format(mode+1), "{:.4f}".format(T[mode]), "{:.3f}".format(frq[mode]), \
 	                 "{:.2f}".format(Omega[mode]), "{:.2f}".format(Lambda[mode])))
-	    arguments.append('Total Mass of the Structure')
+	    arguments.append('Total Activated Masses')
 	    arguments.append('%8s|%8s|%8s' \
 	          % ('M\u2081','M\u2082','M\u2083'))
 	    arguments.append('%8s|%8s|%8s' \
@@ -204,15 +203,13 @@ def ModalAnalysis(numEigen, outname=None, pflag=1):
 	    for mode in range(numEigen):
 	        arguments.append('%4s|%7s|%7s|%7s' % ("{:.0f}".format(mode+1), \
 	            "{:.3f}".format(sM1[mode]), "{:.3f}".format(sM2[mode]), "{:.3f}".format(sM3[mode])))  
-	    arguments = '\n'.join(arguments)
- 
-    # Write results to the .csv file
-    if outname != None:
-        with open(outname+'.csv','w', encoding='utf-32') as f:
-            f.write(arguments)
 
-    # Print modal analysis results to the screen
-    if pflag == 1:
-        print(arguments)
+	    # To the screen
+	    arguments = '\n'.join(arguments); print(arguments)
+ 
+	    # To the .csv file
+	    if outname != None:
+	        with open(outname+'.csv','w', encoding='utf-32') as f:
+	            f.write(arguments)
 
     return T, Mratios, Mfactors, Mtots
