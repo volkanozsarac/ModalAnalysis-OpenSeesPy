@@ -53,6 +53,7 @@ def ModalAnalysis(numEigen, pflag=1, outname=None):
     op.wipeAnalysis()
     op.numberer("Plain")
     op.system('FullGeneral')
+    op.algorithm('Linear')
     op.analysis('Transient')
 
     # Extract the Mass Matrix
